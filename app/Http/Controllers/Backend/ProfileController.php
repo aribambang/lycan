@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Auth;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class ProfileController extends Controller
 {
@@ -51,5 +52,23 @@ class ProfileController extends Controller
 
   public function PasswordView(){
     return view('backend.user.edit-password');
+  }
+
+  public function PasswordUpdate(Request $request){
+    $validatedData = $request->validate([
+      'oldpassword' => 'required',
+      'password' => 'required|confirmed',
+      ]);
+
+    $hashPassword = Auth::user()->password;
+    if(Hash::check($request->oldpassword, $hashPassword)){
+      $user = User::find(Auth::id());
+      $user->password = Hash::make($request->password);
+      $user->save();
+      Auth::logout();
+      return redirect()->route('login');
+    } else {
+      return redirect()->back();
+    }
   }
 }
